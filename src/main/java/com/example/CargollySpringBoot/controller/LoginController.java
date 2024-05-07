@@ -6,9 +6,12 @@ import com.example.CargollySpringBoot.model.request.LoginRequest;
 import com.example.CargollySpringBoot.service.SignupService;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.web.csrf.CsrfToken;
+import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,7 +32,8 @@ public class LoginController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Map<String, String>> login(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<Map<String, String>> login(@RequestBody LoginRequest loginRequest,
+                                                     HttpServletRequest request) {
         String username = loginRequest.getUsername();
         String password = loginRequest.getPassword();
 
@@ -43,6 +47,16 @@ public class LoginController {
                     .body(Collections.singletonMap("error", "Invalid username or password"));
         }
     }
+
+    @PostMapping("/csrf-token")
+    public Map<String, String> getCsrfToken(HttpServletRequest request) {
+        HttpSessionCsrfTokenRepository csrfTokenRepository = new HttpSessionCsrfTokenRepository();
+        CsrfToken csrfToken = csrfTokenRepository.generateToken(request);
+        Map<String, String> response = new HashMap<>();
+        response.put("csrfToken", csrfToken.getToken());
+        return response;
+    }
+
     private String generateToken(String username) {
         String secretKey = SecretKeyGenerator.generateSecretKey();
         return Jwts.builder()
@@ -50,4 +64,5 @@ public class LoginController {
                 .signWith(SignatureAlgorithm.HS256, secretKey)
                 .compact();
     }
+
 }
