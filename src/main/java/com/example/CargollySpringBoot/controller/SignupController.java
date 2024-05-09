@@ -8,6 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api")
 public class SignupController {
@@ -17,6 +19,18 @@ public class SignupController {
     public SignupController(SignupService signupService) {
         this.signupService = signupService;
     }
+
+
+    @GetMapping("/signup")
+    public ResponseEntity<List<Signup>> getAllSignups() {
+        List<Signup> allSignups = signupService.getAllUsers();
+        if (!allSignups.isEmpty()) {
+            return ResponseEntity.ok(allSignups);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
 
     @PostMapping("/signup")
     public ResponseEntity<Signup> createSignup(@RequestBody SignupRequest signupRequest) {

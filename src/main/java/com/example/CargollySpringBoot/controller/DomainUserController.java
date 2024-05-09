@@ -1,4 +1,3 @@
-// DomainUserController.java
 package com.example.CargollySpringBoot.controller;
 
 import com.example.CargollySpringBoot.data.entity.DomainUser;
@@ -23,7 +22,7 @@ public class DomainUserController {
         this.domainUserService = domainUserService;
     }
 
-    @GetMapping("/domainUsers")
+    @GetMapping("/domainUser")
     public ResponseEntity<List<DomainUser>> getAllUsers() {
         List<DomainUser> users = domainUserService.getAllUsers();
         return ResponseEntity.ok(users);
@@ -39,6 +38,7 @@ public class DomainUserController {
     @PostMapping("/domainUser")
     public ResponseEntity<DomainUser> createUser(@Valid @RequestBody DomainUserRequest request) {
         DomainUser user = convertToEntity(request);
+        user.setRole(request.getRole());
         DomainUser createdUser = domainUserService.createUser(user);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
     }
@@ -46,7 +46,8 @@ public class DomainUserController {
     @PutMapping("/domainUser/{id}")
     public ResponseEntity<DomainUser> updateUser(@PathVariable Long id, @Valid @RequestBody DomainUserRequest request) {
         DomainUser user = convertToEntity(request);
-        user.setEmpId(id); // Set empId from path variable
+        user.setRole(request.getRole());
+        user.setEmpId(id);
         DomainUser updatedUser = domainUserService.updateUser(id, user);
         if (updatedUser != null) {
             return ResponseEntity.ok(updatedUser);
@@ -54,6 +55,8 @@ public class DomainUserController {
             return ResponseEntity.notFound().build();
         }
     }
+
+
 
     @DeleteMapping("/domainUser/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {

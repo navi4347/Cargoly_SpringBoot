@@ -29,5 +29,6 @@ public class DomainUser {
     @Column(nullable = false)
     private String contact;
 
-
+    @Column(nullable = false)
+    private String role;
 }

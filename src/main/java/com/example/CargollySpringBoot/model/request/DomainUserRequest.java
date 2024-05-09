@@ -12,5 +12,5 @@ public class DomainUserRequest {
     private String email;
     private String password;
     private String contact;
-    private Set<String> roles;
+    private String role;
 }

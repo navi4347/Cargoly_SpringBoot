@@ -24,15 +24,20 @@ import static org.springframework.security.config.Customizer.withDefaults;
 public class SecurityConfig  {
     @Bean
     public UserDetailsService userDetailsService(PasswordEncoder encoder) {
+
         UserDetails admin = User.withUsername("admin")
-                .password(encoder.encode("!@#$%^&*s"))
+                .password(encoder.encode("cargoly"))
                 .roles("ADMIN")
+                .build();
+        UserDetails employee = User.withUsername("employee")
+                .password(encoder.encode("123456"))
+                .roles("EMPLOYEE")
                 .build();
         UserDetails user = User.withUsername("user")
                 .password(encoder.encode("password"))
                 .roles("USER")
                 .build();
-        return new InMemoryUserDetailsManager(admin, user);
+        return new InMemoryUserDetailsManager(employee, admin, user);
     }
 
     @Bean
@@ -41,6 +46,10 @@ public class SecurityConfig  {
                 .csrf(csrf -> csrf.disable())
                 .authorizeRequests(authorizeRequests -> authorizeRequests
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/api/portpair").hasRole("EMPLOYEE")
+                        .requestMatchers("/api/domainUser").hasRole("ADMIN")
+
+                        .anyRequest().authenticated()
                 )
                 .formLogin(withDefaults())
                 .build();

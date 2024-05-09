@@ -1,12 +1,16 @@
 package com.example.CargollySpringBoot.service.impl;
 
 
+
 import com.example.CargollySpringBoot.data.entity.Signup;
 import com.example.CargollySpringBoot.data.repo.SignupRepo;
 import com.example.CargollySpringBoot.model.request.SignupRequest;
 import com.example.CargollySpringBoot.service.SignupService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 
@@ -45,6 +49,12 @@ public class SignupServiceImpl implements SignupService {
         }
         return null;
     }
+
+    @Override
+    public List<Signup> getAllUsers() {
+        return signupRepo.findAll();
+    }
+
 
     @Override
     public void deleteSignup(Long userid) {
