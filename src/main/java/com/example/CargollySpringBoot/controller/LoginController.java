@@ -31,7 +31,7 @@ public class LoginController {
         this.signupService = signupService;
     }
 
-    @PostMapping("/login")
+    @PostMapping("/userLogin")
     public ResponseEntity<Map<String, String>> login(@RequestBody LoginRequest loginRequest,
                                                      HttpServletRequest request) {
         String username = loginRequest.getUsername();
@@ -48,14 +48,6 @@ public class LoginController {
         }
     }
 
-    @PostMapping("/csrf-token")
-    public Map<String, String> getCsrfToken(HttpServletRequest request) {
-        HttpSessionCsrfTokenRepository csrfTokenRepository = new HttpSessionCsrfTokenRepository();
-        CsrfToken csrfToken = csrfTokenRepository.generateToken(request);
-        Map<String, String> response = new HashMap<>();
-        response.put("csrfToken", csrfToken.getToken());
-        return response;
-    }
 
     private String generateToken(String username) {
         String secretKey = SecretKeyGenerator.generateSecretKey();

@@ -46,9 +46,10 @@ public class SecurityConfig  {
                 .csrf(csrf -> csrf.disable())
                 .authorizeRequests(authorizeRequests -> authorizeRequests
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/api/userLogin").permitAll()
+                        .requestMatchers("/api/signup").hasRole("USER")
                         .requestMatchers("/api/portpair").hasRole("EMPLOYEE")
                         .requestMatchers("/api/domainUser").hasRole("ADMIN")
-
                         .anyRequest().authenticated()
                 )
                 .formLogin(withDefaults())
