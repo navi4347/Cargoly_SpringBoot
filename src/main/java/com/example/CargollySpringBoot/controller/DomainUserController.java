@@ -56,8 +56,6 @@ public class DomainUserController {
         }
     }
 
-
-
     @DeleteMapping("/domainUser/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         domainUserService.deleteUser(id);

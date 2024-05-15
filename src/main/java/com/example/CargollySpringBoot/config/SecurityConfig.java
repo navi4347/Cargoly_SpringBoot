@@ -4,6 +4,7 @@ package com.example.CargollySpringBoot.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -23,33 +24,24 @@ import static org.springframework.security.config.Customizer.withDefaults;
 
 public class SecurityConfig  {
     @Bean
-    public UserDetailsService userDetailsService(PasswordEncoder encoder) {
-
-        UserDetails admin = User.withUsername("admin")
-                .password(encoder.encode("cargoly"))
-                .roles("ADMIN")
-                .build();
-        UserDetails employee = User.withUsername("employee")
-                .password(encoder.encode("123456"))
-                .roles("EMPLOYEE")
-                .build();
-        UserDetails user = User.withUsername("user")
-                .password(encoder.encode("password"))
-                .roles("USER")
-                .build();
-        return new InMemoryUserDetailsManager(employee, admin, user);
-    }
-
-    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(csrf -> csrf.disable())
                 .authorizeRequests(authorizeRequests -> authorizeRequests
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/api/userLogin").permitAll()
-                        .requestMatchers("/api/signup").hasRole("USER")
-                        .requestMatchers("/api/portpair").hasRole("EMPLOYEE")
-                        .requestMatchers("/api/domainUser").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/domainLogin", "/api/validateOtp", "/api/resendOtp").permitAll()
+                        .requestMatchers("/api/portpair").permitAll()
+                        .requestMatchers( HttpMethod.POST, "/api/signup").permitAll()
+                        .requestMatchers(HttpMethod.GET,  "/api/signup").hasRole("SuperAdmin")
+                        .requestMatchers(HttpMethod.PUT,  "/api/signup").hasRole("SuperAdmin")
+                        .requestMatchers(HttpMethod.DELETE,  "/api/signup").hasRole("SuperAdmin")
+                        .requestMatchers( HttpMethod.POST, "/api/domainUser").permitAll()
+                        .requestMatchers(HttpMethod.GET,  "/api/domainUser").hasRole("SuperAdmin")
+                        .requestMatchers(HttpMethod.PUT,  "/api/domainUser").hasRole("SuperAdmin")
+                        .requestMatchers(HttpMethod.DELETE,  "/api/domainUser").hasRole("SuperAdmin")
+                        .requestMatchers("/menu").hasRole("SuperAdmin")
+
                         .anyRequest().authenticated()
                 )
                 .formLogin(withDefaults())
@@ -62,12 +54,26 @@ public class SecurityConfig  {
     }
 
     @Bean
-    public AuthenticationProvider authenticationProvider(UserDetailsService userDetailsService, PasswordEncoder encoder) {
-        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
-        authenticationProvider.setUserDetailsService(userDetailsService);
-        authenticationProvider.setPasswordEncoder(encoder);
-        return authenticationProvider;
-    }
 
+    public InMemoryUserDetailsManager userDetailsManager(PasswordEncoder encoder) {
+        UserDetails superAdmin = User.withUsername("superAdmin")
+                .password(encoder.encode("!@#$%^&*"))
+                .roles("SuperAdmin")
+                .build();
+        UserDetails admin = User.withUsername("admin")
+                .password(encoder.encode("cargoly"))
+                .roles("ADMIN")
+                .build();
+        UserDetails employee = User.withUsername("employee")
+                .password(encoder.encode("123456"))
+                .roles("EMPLOYEE")
+                .build();
+        UserDetails user = User.withUsername("user")
+                .password(encoder.encode("password"))
+                .roles("USER")
+                .build();
+
+        return new InMemoryUserDetailsManager(superAdmin, admin, employee, user);
+    }
 
 }
