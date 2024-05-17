@@ -31,7 +31,7 @@ public class SecurityConfig  {
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/api/userLogin").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/domainLogin", "/api/validateOtp", "/api/resendOtp").permitAll()
-                        .requestMatchers("/api/portpair").hasRole("Employee")
+                        .requestMatchers("/api/portpair").permitAll()
                         .requestMatchers( HttpMethod.POST, "/api/signup").permitAll()
                         .requestMatchers(HttpMethod.GET,  "/api/signup").hasRole("SuperAdmin")
                         .requestMatchers(HttpMethod.PUT,  "/api/signup").hasRole("SuperAdmin")
