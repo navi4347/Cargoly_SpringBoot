@@ -15,12 +15,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.security.core.GrantedAuthority;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,7 +30,6 @@ import java.util.Map;
 @RequestMapping("/api")
 public class DomainLoginController {
     private static final Logger logger = LoggerFactory.getLogger(DomainLoginController.class);
-
     private final DomainLoginService domainLoginService;
     private final OtpService otpService;
     private final JavaMailSender mailSender;
@@ -42,54 +42,57 @@ public class DomainLoginController {
     }
 
     @PostMapping("/domainLogin")
-    public ResponseEntity<Object> login(@Valid @RequestBody DomainLoginRequest loginRequest) {
+    public ResponseEntity<Map<String, Object>> login(@Valid @RequestBody DomainLoginRequest loginRequest) {
         boolean loginSuccess = domainLoginService.login(loginRequest.getEmail(), loginRequest.getPassword());
         if (loginSuccess) {
+            UserDetails userDetails = domainLoginService.loadUserByEmail(loginRequest.getEmail());
+            String role = userDetails.getAuthorities().stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .findFirst()
+                    .orElse("ROLE_USER");
+
             String emailOtp = otpService.generateEmailOtp();
             String token = generateToken(loginRequest.getEmail());
 
             Map<String, Object> responseBody = new HashMap<>();
             responseBody.put("token", token);
             responseBody.put("emailOtp", emailOtp);
+            responseBody.put("role", role);
 
             try {
-                sendEmail(loginRequest.getEmail(), "Email Verification", "Use the following OTP to complete your Login procedures, OTP valid for 60sec", emailOtp);
+                sendEmail(loginRequest.getEmail(), "Email Verification", "Use the following OTP to complete your login procedures, OTP valid for 60 seconds", emailOtp);
                 logger.info("Email sent successfully to {}", loginRequest.getEmail());
             } catch (Exception e) {
                 logger.error("Error sending email: {}", e.getMessage());
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error sending email");
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Error sending email"));
             }
 
             return ResponseEntity.ok(responseBody);
         } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid email or password");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Invalid email or password"));
         }
     }
 
     @PostMapping("/validateOtp")
-    public ResponseEntity<Object> validateOtp(@RequestBody Map<String, String> otpData) {
+    public ResponseEntity<Map<String, Boolean>> validateOtp(@RequestBody Map<String, String> otpData) {
         String emailOtp = otpData.get("emailOtp");
         boolean isValid = otpService.validateEmailOtp(emailOtp);
-        if (isValid) {
-            return ResponseEntity.ok().body(Map.of("isValid", true));
-        } else {
-            return ResponseEntity.ok().body(Map.of("isValid", false));
-        }
+        return ResponseEntity.ok(Map.of("isValid", isValid));
     }
 
     @PostMapping("/resendOtp")
-    public ResponseEntity<Object> resendOtp(@RequestBody Map<String, String> requestData) {
+    public ResponseEntity<Map<String, String>> resendOtp(@RequestBody Map<String, String> requestData) {
         String email = requestData.get("email");
         String emailOtp = otpService.generateEmailOtp();
-        otpService.resendEmailOtp(email);
         try {
-            sendEmail(email, "Your subject", "Your message", emailOtp);
+            otpService.resendEmailOtp(email);
+            sendEmail(email, "Email Verification", "Use the following OTP to complete your login procedures, OTP valid for 60 seconds", emailOtp);
             logger.info("Email resent successfully to {}", email);
+            return ResponseEntity.ok(Map.of("message", "OTP resent successfully"));
         } catch (Exception e) {
             logger.error("Error resending email: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error resending email");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Error resending email"));
         }
-        return ResponseEntity.ok().build();
     }
 
     private String generateToken(String email) {
@@ -108,5 +111,4 @@ public class DomainLoginController {
 
         mailSender.send(message);
     }
-
 }

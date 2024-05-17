@@ -31,7 +31,7 @@ public class SecurityConfig  {
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/api/userLogin").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/domainLogin", "/api/validateOtp", "/api/resendOtp").permitAll()
-                        .requestMatchers("/api/portpair").permitAll()
+                        .requestMatchers("/api/portpair").hasRole("Employee")
                         .requestMatchers( HttpMethod.POST, "/api/signup").permitAll()
                         .requestMatchers(HttpMethod.GET,  "/api/signup").hasRole("SuperAdmin")
                         .requestMatchers(HttpMethod.PUT,  "/api/signup").hasRole("SuperAdmin")
@@ -40,7 +40,8 @@ public class SecurityConfig  {
                         .requestMatchers(HttpMethod.GET,  "/api/domainUser").hasRole("SuperAdmin")
                         .requestMatchers(HttpMethod.PUT,  "/api/domainUser").hasRole("SuperAdmin")
                         .requestMatchers(HttpMethod.DELETE,  "/api/domainUser").hasRole("SuperAdmin")
-                        .requestMatchers("/menu").hasRole("SuperAdmin")
+                        .requestMatchers("/menu").hasRole("Employee")
+
 
                         .anyRequest().authenticated()
                 )
@@ -64,16 +65,16 @@ public class SecurityConfig  {
                 .password(encoder.encode("cargoly"))
                 .roles("ADMIN")
                 .build();
-        UserDetails employee = User.withUsername("employee")
+        UserDetails Employee = User.withUsername("employee")
                 .password(encoder.encode("123456"))
-                .roles("EMPLOYEE")
+                .roles("Employee")
                 .build();
-        UserDetails user = User.withUsername("user")
+        UserDetails Users = User.withUsername("Users")
                 .password(encoder.encode("password"))
-                .roles("USER")
+                .roles("Users")
                 .build();
 
-        return new InMemoryUserDetailsManager(superAdmin, admin, employee, user);
+        return new InMemoryUserDetailsManager(superAdmin, admin, Employee, Users);
     }
 
 }
